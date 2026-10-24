@@ -1,0 +1,22 @@
+[project]
+name = "ecommerce-ai-service"
+version = "1.0.0"
+description = "电商智能客服 AI 服务"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.116.0",
+    "pydantic-settings>=2.10.1",
+    "langchain>=1.0.0,<2.0.0",
+    "langchain-openai>=1.0.0,<2.0.0",
+    "langchain-deepseek>=1.0.0,<2.0.0",
+    "psycopg[binary]>=3.2.9",
+    "pyjwt>=2.10.1",
+    "sqlalchemy>=2.0.41",
+    "uvicorn[standard]>=0.35.0"
+]
+
+[project.optional-dependencies]
+test = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1"
+]
