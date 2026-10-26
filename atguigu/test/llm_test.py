@@ -27,9 +27,11 @@ deepseek模型：只支持工具调用，不支持json_schema
 
 
 """
+import asyncio
 
 from langchain.agents import create_agent
 from langchain_core.messages import HumanMessage
+from langchain_core.callbacks import UsageMetadataCallbackHandler
 from langchain_deepseek import ChatDeepSeek
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
@@ -109,13 +111,39 @@ async def structured_output_3_ca():
     result = await agent.ainvoke({
         "messages": [HumanMessage(content="我的名字叫tom,年龄18，熟练掌握的技能有Python、Java、Vue")]
     })
+    print(repr(result))
 
-    response = result['structured_response']
-    print(repr(response))
+
+async def structured_output_4_ds():
+    """
+    演示： create_agent创建时指定结构化对象，只要是兼容OpenAI协议的都是function_calling
+    :return:
+    结论：
+    """
+    ds_model = ChatDeepSeek(base_url="https://api.deepseek.com",
+                            api_key="sk-1d9800d7c56b43cf83a6e9583b7acfe4",
+                            model="deepseek-chat",
+                            extra_body={"thinking": {"type": "disabled"}})
+
+    usage_callback_handler = UsageMetadataCallbackHandler()
+
+    agent = create_agent(
+        model=ds_model,
+        tools=[],
+        response_format=User
+    )
+
+    result = await agent.ainvoke({
+        "messages": [HumanMessage(content="我的名字叫tom,年龄18，熟练掌握的技能有Python、Java、Vue")]
+    },
+        config={"callbacks": [usage_callback_handler]}
+    )
+    # print(repr(result))
+    print(usage_callback_handler.usage_metadata)
 
 
 if __name__ == '__main__':
-    pass
+    asyncio.run(structured_output_4_ds())
     # asyncio.run(structured_output())
     # asyncio.run(structured_output_1())
     # asyncio.run(structured_output_2_ds_1())

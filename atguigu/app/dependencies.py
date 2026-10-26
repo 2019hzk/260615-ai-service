@@ -1,7 +1,9 @@
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from atguigu.agent.harness.run.executor import AgentExecutor
 from atguigu.app.schemas import CurrentUser
 from atguigu.app.services.auth import get_authorized_user
 from atguigu.common.settings import get_settings
@@ -21,3 +23,11 @@ def require_internal_service(token: Annotated[str | None, Header(alias="X-Intern
 
 
 UserDep = Annotated[CurrentUser, Depends(require_user)]
+
+
+def get_agent_executor(session: SessionDep, request: Request):
+    agent = request.app.state.agent
+    return AgentExecutor(session, agent)
+
+
+AgentExecutorDep = Annotated[AgentExecutor, Depends(get_agent_executor)]
