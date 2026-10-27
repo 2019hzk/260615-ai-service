@@ -1,7 +1,9 @@
 import json
 from dataclasses import dataclass
 from typing import Any
+from typing_extensions import  NotRequired
 
+from langchain.agents import AgentState
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
 from atguigu.app.schemas import AgentRunRequest
@@ -13,6 +15,9 @@ class AgentRuntimeContext:
     access_token: str
     trace_id: str
 
+
+class AgentRuntimeState(AgentState):
+    active_skill_code: NotRequired[str]
 
 def build_messages(payload: AgentRunRequest) -> list[BaseMessage]:
     """
