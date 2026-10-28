@@ -66,7 +66,7 @@ class Validator:
                 )
             # 没有调用skill【普通寒暄 需要检验】 or 携带skill && 且调用工具【校验】
             # 2.4 校验answer
-            validate_answer()
+            validate_answer(agent_output.text, complete_tool_calls)
 
             # 2.5 校验page_action
             validated_page_action: dict[str, Any] = validate_page_action(agent_output.page_action, complete_tool_calls)
