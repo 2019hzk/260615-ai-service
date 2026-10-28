@@ -38,6 +38,8 @@ def _collect_evidence(complete_tool_calls: list[AgentToolCall]) -> tuple[set[flo
     def collect(value: object):
         """
         value类型：
+        参数类型：dict[str,str、int、float]
+        返回结果：
         search_products:1.list[dict[str,"str"、"int"、"float"、dict["str","str"、"int"、"float"]]]
         get_product:dict[str,"str"、"int"、"float"、dict["str","str"、"int"、"float"]]
         list_orders:list[dict["str", "str"、list[dict["str","float"]]]]
@@ -47,11 +49,19 @@ def _collect_evidence(complete_tool_calls: list[AgentToolCall]) -> tuple[set[flo
         :param value:
         :return:
         """
-
-        pass
+        if isinstance(value, dict):
+            for v in value.values():
+                collect(v)
+        elif isinstance(value, list):
+            for item in value:
+                collect(item)
+        elif isinstance(value, str):
+            texts.add(value)
+        elif isinstance(value, int | float):
+            numbers.add(float(value))
 
     for tool_call in complete_tool_calls:
-        collect(tool_call.arguments)   # dict对象
+        collect(tool_call.arguments)  # dict对象
         collect(tool_call.result['data'])
 
     return numbers, texts
