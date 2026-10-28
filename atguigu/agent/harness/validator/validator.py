@@ -78,11 +78,16 @@ class Validator:
 
         # 3. 检验回复类型是【转人工请求】REQUEST_HANDOFF
         if reply_type == ReplyType.REQUEST_HANDOFF:
-            pass
+            if agent_output.handoff_summary is None:
+                raise ValidateOutputError(f"请求转人工必须提供 handoff_summary")
+            return self._build_output(ReplyType.REQUEST_HANDOFF, text=agent_output.text,
+                                      handoff_summary=agent_output.handoff_summary
+                                      )
 
-        # 4. 校验回复类型是【访问澄清】CLARIFY
+        # 4. 校验回复类型是【反问澄清】CLARIFY
         if reply_type == ReplyType.CLARIFY:
-            pass
+            choices = self._build_clarify_choices(tool_calls)
+            return self._build_output(ReplyType.CLARIFY, text=agent_output.text, choices=choices)
 
         # 5. 校验回复类型是【拒绝降级兜底】DECLINE
         return self._build_output(ReplyType.DECLINE, text=BUSINESS_FAILURE_MESSAGE)
@@ -112,3 +117,17 @@ class Validator:
             "page_action": page_action,
             "choices": choices
         }
+
+    def _build_clarify_choices(self, tool_calls: list[AgentToolCall]) -> list[dict[str, Any]] | None:
+        for call in tool_calls:
+            if call.tool_name == "list_orders" and call.success:
+                return [
+                    {
+                        "object_type": "order",
+                        "object_id": order["id"],
+                        "label": f"{order['id']} · {'、'.join(item['product_name'] for item in order['items'])}",
+                        "description": f"¥{order['total_amount']} · {order['status_label']}",
+                    }
+                    for order in call.result['data'][:5]
+                ]
+        return None
