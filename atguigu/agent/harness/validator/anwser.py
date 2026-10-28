@@ -30,7 +30,7 @@ NUMBER_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:元|块|件|台|套|笔|单)")
 def validate_answer(text: str,
                     complete_tool_calls: list[AgentToolCall]):
     """
-    职责：校验答案
+    职责：校验答案(正则可以作为一种校验的策略，但是并不是最好的，开发期间可以结合多种校验策略【扩展点】)
     参与比较对象
     对象1：llm输出的文本
     对象2：工具执行的记录（参数值、返回值的内容）
@@ -99,6 +99,7 @@ def _collect_evidence(complete_tool_calls: list[AgentToolCall]) -> tuple[set[flo
             for v in value.values():
                 collect(v)
         elif isinstance(value, list):
+            numbers.add(float(len(value)))
             for item in value:
                 collect(item)
         elif isinstance(value, str):

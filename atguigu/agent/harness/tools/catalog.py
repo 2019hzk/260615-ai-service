@@ -20,7 +20,6 @@ class ToolCatalog:
     """
     集中管理工具以及所对应的类别
     """
-
     def __init__(self, tool_catalogs: list[tuple[BaseTool, ToolCategory]]):
         self.tools = [tool for tool, _ in tool_catalogs]
         self.categories = {tool.name: category for tool, category in tool_catalogs}

@@ -8,8 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from atguigu.agent.harness.tools.catalog import ToolCategory, TOOL_CATALOG
-from atguigu.agent.harness.validator.action import validate_page_action
-from atguigu.agent.harness.validator.anwser import validate_answer
+
 from atguigu.agent.llm.output import AgentOutput
 from atguigu.app.models.enums import ReplyType, ToolResultCode
 from atguigu.app.models.models import AgentToolCall
@@ -21,6 +20,9 @@ BUSINESS_FAILURE_MESSAGE = ("暂时无法查询到可靠的订单、商品、物
 class ValidateOutputError(ValueError):
     pass
 
+
+from atguigu.agent.harness.validator.action import validate_page_action
+from atguigu.agent.harness.validator.anwser import validate_answer
 
 class Validator:
 

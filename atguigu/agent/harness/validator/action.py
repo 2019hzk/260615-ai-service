@@ -1,6 +1,5 @@
 from typing import Any
 
-from openai.types.responses.response_computer_tool_call_param import ActionType
 
 from atguigu.agent.harness.rules.action import ACTION_CATALOG, ActionCode
 from atguigu.agent.harness.validator.validator import ValidateOutputError
