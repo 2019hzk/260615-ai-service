@@ -15,6 +15,7 @@ class ToolCategory(StrEnum):
     KNOWLEDGE = "KNOWLEDGE"
 
 
+
 class ToolCatalog:
     """
     集中管理工具以及所对应的类别
@@ -38,7 +39,6 @@ class ToolCatalog:
         :return:
         """
         return self.categories[tool_name]
-
 
 TOOL_CATALOG = ToolCatalog(
     [

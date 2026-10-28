@@ -1,7 +1,7 @@
 from langchain.agents import create_agent
 
 from atguigu.agent.harness.middleware.scope import SkillScopeMiddleware
-from atguigu.agent.harness.run.context import AgentRuntimeState
+from atguigu.agent.harness.run.context import AgentRuntimeState, AgentRuntimeContext
 from atguigu.agent.harness.tools.catalog import TOOL_CATALOG
 from atguigu.agent.llm.adapter import get_model_client
 from atguigu.agent.llm.output import AgentOutput
@@ -21,6 +21,7 @@ def build_agent():
             SkillScopeMiddleware()
         ],
         response_format=AgentOutput,
+        context_schema=AgentRuntimeContext,
         state_schema=AgentRuntimeState,
         name="智能客服专家"
     )

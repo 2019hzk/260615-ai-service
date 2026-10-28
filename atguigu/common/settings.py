@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     llm_base_url: str = Field("https://api.deepseek.com", description="大模型接口基础地址")
     llm_thinking_mode: Literal["True", "False"] = Field("False", description="是否开启大模型深度思考模式")
     llm_timeout_seconds: float = Field(30.0, description="调用大模型的超时秒数")
+    agent_max_attempts: int = Field(2, description="Agent 推理与护栏校验最大尝试次数")
 
     history_message_limit: int = Field(30, description="注入上下文的最大历史消息条数")
     history_character_budget: int = Field(12000, description="注入上下文的最大历史字符预算")

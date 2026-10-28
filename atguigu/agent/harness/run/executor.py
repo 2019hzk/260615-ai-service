@@ -24,7 +24,7 @@ class AgentExecutor:
         self._settings = get_settings()
         self._session = session
         self._agent = agent
-        self._validator = Validator()
+        self._validator = Validator(session)
 
     async def start_run(self, payload: AgentRunRequest, access_token: str) -> dict[str, Any]:
         """
@@ -104,7 +104,11 @@ class AgentExecutor:
                 config={"callbacks": [call_back]}
             )
 
-            validated_result = await self._validator.validate(state['structured_response'])
+            validated_result:dict[str,Any] = await self._validator.validate(
+                state['structured_response'],
+                state['active_skill_code'],
+                runtime_context.trace_id
+            )
 
         # 4. 推理期间出错(重试)
         except ValidateOutputError as exc:

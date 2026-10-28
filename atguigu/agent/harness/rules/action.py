@@ -31,7 +31,7 @@ class ActionDefinition:
         return {
             "label": self.label,
             "description": self.description,
-            "href": self.path_template.format(resource_id=resource_id)
+            "href": self.path_template.format(resource_id=resource_id or "")
         }
 
 
@@ -41,8 +41,8 @@ class ActionCatalog:
     def __init__(self, definitions: list[ActionDefinition]):
         self.definitions = {definition.action_code: definition for definition in definitions}
 
-    def get_definition(self, action_code: ActionCode) -> ActionDefinition:
-        return self.definitions[action_code]
+    def get_definition(self, action_code: ActionCode) -> ActionDefinition | None:
+        return self.definitions.get(action_code,None)
 
     def render_index(self) -> str:
         """
@@ -98,3 +98,6 @@ ACTION_CATALOG = ActionCatalog(
         ),
     ]
 )
+
+
+

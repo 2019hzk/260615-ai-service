@@ -168,7 +168,7 @@ async def load_skill(
         runtime: ToolRuntime[AgentRuntimeContext, AgentRuntimeState],
         skill_code: Annotated[str, "用户当前问题最相关的客服领域技能码"],
 ) -> Command:
-    """加载技能"""
+    """加载客服领域技能并更新当前 Agent 的能力范围"""
 
     # 1. 根据技能码获取技能对象的指导
     skill_definition = SKILL_CATALOG.get_definition(skill_code)
