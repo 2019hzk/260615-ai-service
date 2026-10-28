@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Any
 
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, SystemMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 from langchain_core.callbacks import UsageMetadataCallbackHandler
@@ -93,27 +93,33 @@ class AgentExecutor:
 
         # 2. 创建回调处理器
         call_back = UsageMetadataCallbackHandler()
-
         validated_result: dict[str, Any] = {}
 
         # 3. 执行Agent推理
-        try:
-            state: dict[str, Any] = await self._agent.ainvoke(
-                {"messages": messages},
-                context=runtime_context,
-                config={"callbacks": [call_back]}
-            )
+        for attempt in range(self._settings.agent_max_attempts):
+            try:
+                state: dict[str, Any] = await self._agent.ainvoke(
+                    {"messages": messages},
+                    context=runtime_context,
+                    config={"callbacks": [call_back]}
+                )
+                validated_result: dict[str, Any] = await self._validator.validate(
+                    state['structured_response'],
+                    state['active_skill_code'],
+                    runtime_context.trace_id
+                )
+                break
 
-            validated_result:dict[str,Any] = await self._validator.validate(
-                state['structured_response'],
-                state['active_skill_code'],
-                runtime_context.trace_id
-            )
-
-        # 4. 推理期间出错(重试)
-        except ValidateOutputError as exc:
-            # TODO :后续接入自定义的异常，让模型重试修复
-            pass
+            # 4. 推理期间出错(重试)
+            except ValidateOutputError as exc:
+                if attempt == self._settings.agent_max_attempts - 1:
+                    raise
+                messages = [
+                    *state["messages"],
+                    SystemMessage(
+                        content=f"上一次回复未通过校验：{exc}，请修正后重新回复。"
+                    ),
+                ]
 
         # 5. 构建输入输出的token用量
         input_tokens, output_tokens = self._summarize_tokens(call_back)
