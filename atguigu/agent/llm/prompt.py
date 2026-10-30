@@ -24,7 +24,7 @@ def build_system_prompt() -> str:
     return (
         f"{BASE_PROMPT}\n\n"
         f"【可用 Skill】\n{SKILL_CATALOG.render_index()}\n"
-        "处理商品、订单、物流、售后或规则问题时，请调用 load_skill 加载或切换对应领域的 Skill。\n\n"
+        "处理商品、订单、物流、售后或规则问题时，请调用 load_skill 加载或切换对应领域的 Skill。若同时涉及多个领域，一次只加载并处理一个 Skill，完成后再切换下一个 Skill。\n\n"
         f"【白名单页面动作】\n{ACTION_CATALOG.render_index()}"
     )
 

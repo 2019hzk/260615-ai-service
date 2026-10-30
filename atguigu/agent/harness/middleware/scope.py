@@ -37,4 +37,4 @@ class SkillScopeMiddleware(AgentMiddleware[AgentRuntimeContext, AgentRuntimeStat
         visible_tools = [tool for tool in request.tools if tool.name in allow_tool_name]
 
         # 5. 更新请求
-        return await handler(request.override(tools=visible_tools))
+        return await handler(request.override(tools=visible_tools,model_settings={"parallel_tool_calls": False}))
