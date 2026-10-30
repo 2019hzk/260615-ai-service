@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from typing import Any
-from typing_extensions import  NotRequired
+from typing_extensions import NotRequired
 
 from langchain.agents import AgentState
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
@@ -32,9 +32,9 @@ def build_messages(payload: AgentRunRequest) -> list[BaseMessage]:
 
     # 2. 标准化消息对象为LangChain统一的消息对象
     messages = [
-        HumanMessage(content="")
+        HumanMessage(content=_format_message(message))
         if message['role'] == "USER"
-        else AIMessage(content="")
+        else AIMessage(content=_format_message(message))
         for message in history_messages
     ]
 

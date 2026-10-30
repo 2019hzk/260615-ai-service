@@ -30,7 +30,7 @@ def get_model_client():
         return ChatDeepSeek(
             **model_kwargs,
             extra_body={
-                "thinking": {"typing": "disabled"}
+                "thinking": {"type": "disabled"}
             }
         )
 
@@ -40,10 +40,9 @@ def get_model_client():
             extra_body={
                 "enable_thinking": settings.llm_thinking_mode
             },
-            use_responses_api=False  # LangChain新版整合了Resonse api方式集成了，防止LangChain找错端点
+            use_responses_api=False  # LangChain新版整合了Response api方式集成了，防止LangChain找错端点
         )
     # 其它的模型提供商各自的私有参数  都可以适配TODO
-
 
     return ChatOpenAI(
         **model_kwargs,
