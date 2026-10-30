@@ -105,7 +105,7 @@ class AgentExecutor:
                 )
                 validated_result: dict[str, Any] = await self._validator.validate(
                     state['structured_response'],
-                    state['active_skill_code'],
+                    state.get('active_skill_code'),
                     runtime_context.trace_id
                 )
                 break

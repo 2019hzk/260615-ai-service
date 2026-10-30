@@ -24,6 +24,7 @@ class ValidateOutputError(ValueError):
 from atguigu.agent.harness.validator.action import validate_page_action
 from atguigu.agent.harness.validator.anwser import validate_answer
 
+
 class Validator:
 
     def __init__(self, session: AsyncSession):
@@ -51,29 +52,37 @@ class Validator:
         # 2. 校验回复类型是ANSWER(可靠的答案)
         if reply_type == ReplyType.ANSWER:
 
-            # 2.1 查询所有的业务类型工具（特殊的工具类型不需要，搜索工具类型目前不校验(可扩展)）
+            # 2.1 校验skill-tools的闭环
+            if skill_code is not None and not tool_calls:
+                raise ValidateOutputError(
+                    f"已加载技能 {skill_code}，但尚未调用任何查询工具获取数据，请先调用对应工具再回答"
+                )
+
+            # 2.2 查询所有的业务类型工具（特殊的工具类型不需要，搜索工具类型目前不校验(可扩展)）
             business_tool_calls = [
                 bs_call for bs_call in tool_calls
                 if TOOL_CATALOG.get_category(bs_call.tool_name) == ToolCategory.BUSINESS
             ]
 
-            # 2.2 获取所有业务工具已经调用电商接口成功的
+            # 2.3 过滤掉 搜索工具（不需要进行回复答案以及页面行动校验）
+            if tool_calls and not business_tool_calls:
+                return self._build_output(ReplyType.ANSWER, agent_output.text)
+
+            # 2.4 获取所有业务工具已经调用电商接口成功的
             complete_tool_calls = [cs_call for cs_call in business_tool_calls if
                                    cs_call.result['code'] != ToolResultCode.TOOL_CALL_FAILED]
+            # 主动触发降级
+            if business_tool_calls and not complete_tool_calls:
+                return self._build_output(ReplyType.DECLINE, text=BUSINESS_FAILURE_MESSAGE)
 
-            # 2.3 校验skill-tools的闭环
-            if skill_code is not None and not business_tool_calls:
-                raise ValidateOutputError(
-                    f"已加载技能 {skill_code}，但尚未调用任何查询工具获取数据，请先调用对应工具再回答"
-                )
             # 没有调用skill【普通寒暄 需要检验】 or 携带skill && 且调用工具【校验】
-            # 2.4 校验answer
+            # 2.5 校验answer
             validate_answer(agent_output.text, complete_tool_calls)
 
-            # 2.5 校验page_action
+            # 2.6 校验page_action
             validated_page_action: dict[str, Any] = validate_page_action(agent_output.page_action, complete_tool_calls)
 
-            # 2.6 构建输出
+            # 2.7 构建输出
             return self._build_output(ReplyType.ANSWER,
                                       agent_output.text,
                                       page_action=validated_page_action)
