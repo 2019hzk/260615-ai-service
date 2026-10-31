@@ -8,8 +8,9 @@ from fastapi import HTTPException
 from langchain_core.callbacks import UsageMetadataCallbackHandler
 
 from atguigu.agent.harness.run.context import AgentRuntimeContext, build_messages
-from atguigu.agent.harness.validator.validator import Validator, ValidateOutputError
-from atguigu.app.models.enums import AgentTraceStatus
+from atguigu.agent.harness.validator.validator import Validator, ValidateOutputError, build_output
+from atguigu.agent.harness.validator.jev import check_input
+from atguigu.app.models.enums import AgentTraceStatus, ReplyType
 from atguigu.app.models.models import AgentTrace
 from atguigu.app.schemas import AgentRunRequest
 from atguigu.common.settings import get_settings
@@ -88,18 +89,28 @@ class AgentExecutor:
             如果指定了response_format,还可以获取到结构化的输出对象
             如果指定了state_schema，还可以获取到修改后的状态
         """
-        # 1. 构建消息
-        messages: list[BaseMessage] = build_messages(payload)
+        # 1. Jev 前置检查：识别转人工/愤怒情绪，并预选领域技能
+        need_handoff, skill_code, jev_input_tokens, jev_output_tokens = await check_input(payload.messages)
+        if need_handoff:
+            result = build_output(
+                ReplyType.REQUEST_HANDOFF,
+                text="已收到您的诉求，正在为您转接人工客服优先处理，请稍候。",
+                handoff_summary="用户要求转接人工客服或情绪较为焦急，请人工客服优先介入处理。",
+            )
+            return result, jev_input_tokens, jev_output_tokens
 
-        # 2. 创建回调处理器
+        # 2. 构建消息
+        messages: list[BaseMessage] = build_messages(payload, skill_code)
+
+        # 3. 创建回调处理器
         call_back = UsageMetadataCallbackHandler()
         validated_result: dict[str, Any] = {}
 
-        # 3. 执行Agent推理
+        # 4. 执行Agent推理
         for attempt in range(self._settings.agent_max_attempts):
             try:
                 state: dict[str, Any] = await self._agent.ainvoke(
-                    {"messages": messages},
+                    {"messages": messages, "active_skill_code": skill_code},
                     context=runtime_context,
                     config={"callbacks": [call_back]}
                 )
@@ -110,7 +121,7 @@ class AgentExecutor:
                 )
                 break
 
-            # 4. 推理期间出错(重试)
+            # 5. 推理期间出错(重试)
             except ValidateOutputError as exc:
                 if attempt == self._settings.agent_max_attempts - 1:
                     raise
@@ -121,11 +132,11 @@ class AgentExecutor:
                     ),
                 ]
 
-        # 5. 构建输入输出的token用量
+        # 6. 构建输入输出的token用量
         input_tokens, output_tokens = self._summarize_tokens(call_back)
 
-        # 6. 返回最终Agent结果以及token用量
-        return validated_result, input_tokens, output_tokens
+        # 7. 返回最终Agent结果以及token用量
+        return validated_result, input_tokens + jev_input_tokens, output_tokens + jev_output_tokens
 
     @staticmethod
     def _summarize_tokens(call_back: UsageMetadataCallbackHandler) -> tuple[int, int]:

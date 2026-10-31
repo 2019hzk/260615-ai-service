@@ -56,7 +56,7 @@ def validate_answer(text: str,
     # 3. 利用正则+in获取text中的数值
     for raw_number in set(NUMBER_RE.findall(text)):
         if float(raw_number) not in evidence_numbers:
-            unsupported.append(float(raw_number))
+            unsupported.append(raw_number)
 
     # 4. 利用映射表+in获取text中的状态
     for label, code in STATUS_CODE_MAP.items():

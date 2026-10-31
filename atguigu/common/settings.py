@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     history_character_budget: int = Field(12000, description="注入上下文的最大历史字符预算")
     prompt_version: str = Field("customer-support-v1", description="当前系统提示词版本号")
 
+    typesafe_api_key: str = Field("", description="TypeSafe Jev 模型 API Key")
+    typesafe_base_url: str = Field("https://api.typesafe.ai", description="TypeSafe Jev 接口基础地址")
+    typesafe_model: str = Field("jev-latest", description="TypeSafe System One 决策模型名称")
+
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
         extra="ignore",

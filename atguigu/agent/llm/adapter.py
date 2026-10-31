@@ -8,6 +8,7 @@ from typing import Any
 
 from langchain_deepseek import ChatDeepSeek
 from langchain_openai import ChatOpenAI
+from typesafe_sdk import AsyncTypeSafeClient
 
 from atguigu.common.settings import get_settings
 
@@ -47,4 +48,14 @@ def get_model_client():
     return ChatOpenAI(
         **model_kwargs,
         use_responses_api=False
+    )
+
+
+def get_jev_client() -> AsyncTypeSafeClient:
+    """获取 TypeSafe Jev 模型客户端实例"""
+    settings = get_settings()
+    return AsyncTypeSafeClient(
+        api_key=settings.typesafe_api_key,
+        base_url=settings.typesafe_base_url,
+        model=settings.typesafe_model,
     )

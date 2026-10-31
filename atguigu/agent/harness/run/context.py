@@ -4,8 +4,9 @@ from typing import Any
 from typing_extensions import NotRequired
 
 from langchain.agents import AgentState
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
+from atguigu.agent.harness.rules.skill import SKILL_CATALOG, SkillCode
 from atguigu.app.schemas import AgentRunRequest
 from atguigu.common.settings import get_settings
 
@@ -19,11 +20,13 @@ class AgentRuntimeContext:
 class AgentRuntimeState(AgentState):
     active_skill_code: NotRequired[str]
 
-def build_messages(payload: AgentRunRequest) -> list[BaseMessage]:
+
+def build_messages(payload: AgentRunRequest, skill_code: SkillCode | None = None) -> list[BaseMessage]:
     """
     职责：构建Agent运行时需要的消息
     1. 历史消息：多条、角色【USER / AI / HUMAN】
     2. 当前轮次的消息:有可能有多条、角色【USER】
+    3. 预加载技能规则：若前置匹配到领域技能，注入对应指导规则
     :return:
     """
 
@@ -42,7 +45,15 @@ def build_messages(payload: AgentRunRequest) -> list[BaseMessage]:
     current_messages = _build_current_messages(payload.messages)
     messages.append(HumanMessage(content=current_messages))
 
-    # 4. 返回历史消息+当前轮次消息的组合
+    # 4. 若匹配到领域技能，将对应技能规则注入上下文
+    if skill_code is not None:
+        skill_definition = SKILL_CATALOG.get_definition(skill_code)
+        skill_guidance = "\n".join(f"- {guidance}" for guidance in skill_definition.guidance)
+        messages.append(
+            SystemMessage(content=f"已经成功加载技能{skill_code}，请遵循以下规则:{skill_guidance}")
+        )
+
+    # 5. 返回组合后的消息列表
     return messages
 
 

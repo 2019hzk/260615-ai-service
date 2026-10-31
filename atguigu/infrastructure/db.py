@@ -1,3 +1,4 @@
+import json
 from typing import AsyncGenerator
 from logging import getLogger
 
@@ -8,7 +9,8 @@ from atguigu.common.settings import get_settings
 
 async_engine: AsyncEngine = create_async_engine(
     url=get_settings().ai_database_url,
-    echo=False
+    echo=False,
+    json_serializer=lambda value: json.dumps(value, ensure_ascii=False)
 )
 
 async_session_factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
